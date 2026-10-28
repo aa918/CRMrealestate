@@ -9,14 +9,6 @@ export function useDashboardSummary() {
   })
 }
 
-export function useRecentLeads(limit = 8) {
-  return useQuery({
-    queryKey: ["dashboard", "recent-leads", limit],
-    queryFn: () => apiGet("/dashboard/recent-leads", { params: { limit } }),
-    refetchInterval: 60_000,
-  })
-}
-
 export function useResponsePerformance() {
   return useQuery({
     queryKey: ["dashboard", "response-performance"],

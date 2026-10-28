@@ -78,4 +78,4 @@ async function notifyLeadResponded(lead) {
   return sendEvent("lead.responded", buildLeadCreatedPayload(lead), lead.organizationId);
 }
 
-module.exports = { sendEvent, notifyLeadCreated, notifyLeadOverdue, notifyLeadResponded };
+module.exports = { notifyLeadCreated, notifyLeadOverdue, notifyLeadResponded };

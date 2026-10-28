@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { apiList, apiGet, apiPost, apiPatch } from "../lib/apiClient"
+import { apiList, apiPost, apiPatch } from "../lib/apiClient"
 
 export function useUsers(query = {}) {
   return useQuery({
@@ -12,14 +12,6 @@ export function useAgents() {
   // AGENT-role users, for assignment dropdowns. isActive=true keeps the
   // list relevant (deactivated agents shouldn't receive new assignments).
   return useUsers({ role: "AGENT", isActive: true, limit: 100 })
-}
-
-export function useUser(id) {
-  return useQuery({
-    queryKey: ["user", id],
-    queryFn: () => apiGet(`/users/${id}`),
-    enabled: Boolean(id),
-  })
 }
 
 export function useCreateUser() {

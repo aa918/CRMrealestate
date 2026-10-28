@@ -17,12 +17,3 @@ export const createLeadSchema = z.object({
   message: z.string().optional().or(z.literal("")),
   assignedUserId: z.preprocess(emptyToUndef, z.string().optional()),
 })
-
-export const updateLeadDetailsSchema = z.object({
-  interestType: z.preprocess(emptyToUndef, z.enum(INTEREST_TYPE).optional()),
-  propertyType: z.preprocess(emptyToUndef, z.enum(PROPERTY_KIND).optional()),
-  city: z.string().optional().or(z.literal("")),
-  budget: z.preprocess((v) => (v === "" || v === null || v === undefined ? undefined : Number(v)), z.number().nonnegative().optional()),
-  bedrooms: z.preprocess((v) => (v === "" || v === null || v === undefined ? undefined : Number(v)), z.number().int().nonnegative().optional()),
-  message: z.string().optional().or(z.literal("")),
-})

@@ -24,8 +24,6 @@ export const DEAL_STAGE_TONE = {
   LOST: "neutral",
 }
 
-export const TASK_STATUS_TONE = { OPEN: "info", IN_PROGRESS: "warning", DONE: "success", CANCELLED: "neutral" }
-
 export const TASK_PRIORITY_TONE = { LOW: "neutral", MEDIUM: "info", HIGH: "warning", URGENT: "danger" }
 
 export const PROPERTY_STATUS_TONE = {

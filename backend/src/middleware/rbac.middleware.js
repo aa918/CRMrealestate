@@ -42,4 +42,4 @@ function scopeForUser(user, assignedField) {
   return { [assignedField]: user.id };
 }
 
-module.exports = { requireRole, isManagerOrAdmin, scopeForUser };
+module.exports = { requireRole, scopeForUser };

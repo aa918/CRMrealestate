@@ -38,16 +38,4 @@ function list(organizationId, { where = {}, skip, take }) {
   ]);
 }
 
-function countWonThisMonth(organizationId, monthStart) {
-  return prisma.deal.count({
-    where: { organizationId, stage: "WON", closedAt: { gte: monthStart } },
-  });
-}
-
-function countOpen(organizationId) {
-  return prisma.deal.count({
-    where: { organizationId, stage: { notIn: ["WON", "LOST"] } },
-  });
-}
-
-module.exports = { DEFAULT_INCLUDE, create, findByIdInOrg, updateInOrg, remove, list, countWonThisMonth, countOpen };
+module.exports = { DEFAULT_INCLUDE, create, findByIdInOrg, updateInOrg, remove, list };

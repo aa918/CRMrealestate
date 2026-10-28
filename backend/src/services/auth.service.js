@@ -82,4 +82,4 @@ async function getMe(userId) {
   return { ...user, organization: organization ? { id: organization.id, name: organization.name } : null };
 }
 
-module.exports = { register, login, getMe, signToken };
+module.exports = { register, login, getMe };

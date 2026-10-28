@@ -94,20 +94,6 @@ export const TASK_TYPE_LABELS = {
 export const TASK_PRIORITY = ["LOW", "MEDIUM", "HIGH", "URGENT"]
 export const TASK_PRIORITY_LABELS = { LOW: "נמוכה", MEDIUM: "רגילה", HIGH: "גבוהה", URGENT: "דחופה" }
 
-export const TASK_STATUS = ["OPEN", "IN_PROGRESS", "DONE", "CANCELLED"]
-export const TASK_STATUS_LABELS = { OPEN: "פתוחה", IN_PROGRESS: "בתהליך", DONE: "הושלמה", CANCELLED: "בוטלה" }
-
-export const ACTIVITY_TYPE = [
-  "CALL",
-  "WHATSAPP",
-  "EMAIL",
-  "MEETING",
-  "NOTE",
-  "LEAD_CREATED",
-  "STATUS_CHANGED",
-  "TASK_CREATED",
-  "SYSTEM",
-]
 export const ACTIVITY_TYPE_LABELS = {
   CALL: "שיחת טלפון",
   WHATSAPP: "וואטסאפ",
@@ -120,7 +106,3 @@ export const ACTIVITY_TYPE_LABELS = {
   SYSTEM: "מערכת",
 }
 
-export const ACTIVITY_DIRECTION = ["INBOUND", "OUTBOUND"]
-export const ACTIVITY_DIRECTION_LABELS = { INBOUND: "נכנסת", OUTBOUND: "יוצאת" }
-
-export const label = (map, value) => (value ? map[value] || value : "—")

@@ -15,4 +15,4 @@ function parsePagination(query = {}) {
   return { page, limit, skip: (page - 1) * limit, take: limit };
 }
 
-module.exports = { parsePagination, DEFAULT_LIMIT, MAX_LIMIT };
+module.exports = { parsePagination };

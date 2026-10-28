@@ -35,16 +35,4 @@ function listByContact(contactId, organizationId, { skip, take }) {
   ]);
 }
 
-/**
- * First-ever activity of one of the "response" types (CALL/WHATSAPP/EMAIL)
- * for a given lead, used to detect whether an incoming activity is truly
- * the agent's *first* response (speed-to-lead).
- */
-function findFirstResponseActivity(leadId, responseTypes) {
-  return prisma.activity.findFirst({
-    where: { leadId, type: { in: responseTypes } },
-    orderBy: { createdAt: "asc" },
-  });
-}
-
-module.exports = { create, list, listByContact, findFirstResponseActivity };
+module.exports = { create, list, listByContact };

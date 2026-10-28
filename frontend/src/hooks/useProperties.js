@@ -1,19 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { apiList, apiGet, apiPost, apiPatch, apiDelete } from "../lib/apiClient"
+import { apiList, apiPost, apiPatch, apiDelete } from "../lib/apiClient"
 
 export function useProperties(query = {}) {
   return useQuery({
     queryKey: ["properties", query],
     queryFn: () => apiList("/properties", { params: query }),
     placeholderData: (prev) => prev,
-  })
-}
-
-export function useProperty(id) {
-  return useQuery({
-    queryKey: ["property", id],
-    queryFn: () => apiGet(`/properties/${id}`),
-    enabled: Boolean(id),
   })
 }
 

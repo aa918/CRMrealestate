@@ -4,20 +4,11 @@ const currencyFormatter = new Intl.NumberFormat("he-IL", {
   maximumFractionDigits: 0,
 })
 
-const numberFormatter = new Intl.NumberFormat("he-IL")
-
 export function formatCurrency(value) {
   if (value === null || value === undefined || value === "") return "—"
   const n = Number(value)
   if (Number.isNaN(n)) return "—"
   return currencyFormatter.format(n)
-}
-
-export function formatNumber(value) {
-  if (value === null || value === undefined || value === "") return "—"
-  const n = Number(value)
-  if (Number.isNaN(n)) return "—"
-  return numberFormatter.format(n)
 }
 
 export function formatDate(value) {
@@ -38,13 +29,6 @@ export function formatDateTime(value) {
     hour: "2-digit",
     minute: "2-digit",
   })
-}
-
-export function formatTime(value) {
-  if (!value) return "—"
-  const d = new Date(value)
-  if (Number.isNaN(d.getTime())) return "—"
-  return d.toLocaleTimeString("he-IL", { hour: "2-digit", minute: "2-digit" })
 }
 
 /** Human "X דקות / שעות / ימים" elapsed-time phrase, used for response timers. */

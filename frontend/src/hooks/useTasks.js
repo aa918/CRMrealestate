@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { apiList, apiGet, apiPost, apiPatch, apiDelete } from "../lib/apiClient"
+import { apiList, apiGet, apiPost, apiPatch } from "../lib/apiClient"
 
 export function useTasks(query = {}) {
   return useQuery({
@@ -21,14 +21,6 @@ export function useTasksToday() {
   })
 }
 
-export function useTask(id) {
-  return useQuery({
-    queryKey: ["task", id],
-    queryFn: () => apiGet(`/tasks/${id}`),
-    enabled: Boolean(id),
-  })
-}
-
 export function useCreateTask() {
   const queryClient = useQueryClient()
   return useMutation({
@@ -44,18 +36,6 @@ export function useUpdateTask() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: ({ id, payload }) => apiPatch(`/tasks/${id}`, payload),
-    onSuccess: (task) => {
-      queryClient.invalidateQueries({ queryKey: ["tasks"] })
-      queryClient.invalidateQueries({ queryKey: ["task", task.id] })
-      queryClient.invalidateQueries({ queryKey: ["dashboard"] })
-    },
-  })
-}
-
-export function useDeleteTask() {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: (id) => apiDelete(`/tasks/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tasks"] })
       queryClient.invalidateQueries({ queryKey: ["dashboard"] })

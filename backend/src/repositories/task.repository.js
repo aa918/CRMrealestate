@@ -38,24 +38,4 @@ function list(organizationId, { where = {}, skip, take }) {
   ]);
 }
 
-function countDueToday(organizationId, startOfDay, endOfDay) {
-  return prisma.task.count({
-    where: {
-      organizationId,
-      status: { notIn: ["DONE", "CANCELLED"] },
-      dueAt: { gte: startOfDay, lte: endOfDay },
-    },
-  });
-}
-
-function countOverdue(organizationId, now) {
-  return prisma.task.count({
-    where: {
-      organizationId,
-      status: { notIn: ["DONE", "CANCELLED"] },
-      dueAt: { lt: now },
-    },
-  });
-}
-
-module.exports = { DEFAULT_INCLUDE, create, findByIdInOrg, updateInOrg, remove, list, countDueToday, countOverdue };
+module.exports = { DEFAULT_INCLUDE, create, findByIdInOrg, updateInOrg, remove, list };

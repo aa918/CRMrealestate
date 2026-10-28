@@ -84,4 +84,4 @@ async function listActivitiesForContact(organizationId, contactId, query) {
   return { items, pagination: buildPaginationMeta({ page, limit, total }) };
 }
 
-module.exports = { createActivity, listActivities, listActivitiesForContact, maybeMarkLeadResponded };
+module.exports = { createActivity, listActivities, listActivitiesForContact };

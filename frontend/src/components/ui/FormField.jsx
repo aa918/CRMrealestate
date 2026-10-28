@@ -3,7 +3,9 @@ import clsx from "clsx"
 const baseInputClasses =
   "focus-ring w-full rounded-lg border border-border bg-white px-3 h-10 text-sm text-text placeholder:text-muted disabled:bg-slate-50 disabled:text-muted"
 
-export function Label({ children, required, className }) {
+// Internal to this file - only Field below renders them; other files
+// import Field/Input/Select/Textarea, not these two directly.
+function Label({ children, required, className }) {
   return (
     <label className={clsx("mb-1.5 block text-sm font-medium text-text", className)}>
       {children}
@@ -12,7 +14,7 @@ export function Label({ children, required, className }) {
   )
 }
 
-export function FieldError({ children }) {
+function FieldError({ children }) {
   if (!children) return null
   return <p className="mt-1 text-xs text-danger">{children}</p>
 }

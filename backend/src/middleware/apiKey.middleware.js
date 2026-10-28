@@ -1,5 +1,6 @@
 const { env } = require("../config/env");
 const { prisma } = require("../config/database");
+const organizationRepository = require("../repositories/organization.repository");
 const ApiError = require("../utils/ApiError");
 const asyncHandler = require("../utils/asyncHandler");
 
@@ -34,7 +35,7 @@ const resolvePublicOrganization = asyncHandler(async (req, res, next) => {
     throw ApiError.unauthorized("Missing x-public-api-key header", "MISSING_PUBLIC_API_KEY");
   }
 
-  const org = await prisma.organization.findUnique({ where: { publicApiKey: String(providedKey) } });
+  const org = await organizationRepository.findByPublicApiKey(String(providedKey));
 
   if (org) {
     if (!org.isActive) {
@@ -60,20 +61,4 @@ const resolvePublicOrganization = asyncHandler(async (req, res, next) => {
   throw ApiError.unauthorized("Invalid public API key", "INVALID_PUBLIC_API_KEY");
 });
 
-function requireN8nSecret(req, res, next) {
-  const provided = req.headers["x-n8n-secret"];
-  if (!env.N8N_API_SECRET) {
-    // Not configured yet - allow through in development so the endpoint
-    // can still be exercised manually, but never in production.
-    if (env.NODE_ENV === "production") {
-      return next(ApiError.internal("N8N_API_SECRET is not configured", "N8N_SECRET_NOT_CONFIGURED"));
-    }
-    return next();
-  }
-  if (!provided || provided !== env.N8N_API_SECRET) {
-    return next(ApiError.unauthorized("Invalid n8n secret", "INVALID_N8N_SECRET"));
-  }
-  next();
-}
-
-module.exports = { requireInternalApiKey, resolvePublicOrganization, requireN8nSecret };
+module.exports = { requireInternalApiKey, resolvePublicOrganization };
