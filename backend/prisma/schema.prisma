@@ -1,0 +1,430 @@
+// ==================================================
+// Real Estate CRM - Prisma Schema
+// Multi-tenant (Organization) architecture
+// ==================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ==================================================
+// ENUMS
+// ==================================================
+
+enum Role {
+  ADMIN
+  MANAGER
+  AGENT
+}
+
+enum LeadSource {
+  FACEBOOK
+  INSTAGRAM
+  WEBSITE
+  WHATSAPP
+  PHONE
+  REFERRAL
+  MANUAL
+  OTHER
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  QUALIFIED
+  MEETING
+  PROPERTY_SENT
+  PROPERTY_VISIT
+  NEGOTIATION
+  WON
+  LOST
+}
+
+enum ResponseStatus {
+  WAITING
+  RESPONDED
+  OVERDUE
+}
+
+enum InterestType {
+  BUY
+  RENT
+  SELL
+}
+
+enum PropertyKind {
+  APARTMENT
+  HOUSE
+  PENTHOUSE
+  DUPLEX
+  STUDIO
+  VILLA
+  LAND
+  COMMERCIAL
+  OTHER
+}
+
+enum TransactionType {
+  SALE
+  RENT
+}
+
+enum PropertyStatus {
+  AVAILABLE
+  RESERVED
+  SOLD
+  RENTED
+  INACTIVE
+}
+
+enum DealStage {
+  OPEN
+  MEETING
+  OFFER
+  NEGOTIATION
+  WON
+  LOST
+}
+
+enum TaskType {
+  CALL
+  WHATSAPP
+  EMAIL
+  MEETING
+  FOLLOW_UP
+  OTHER
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum TaskStatus {
+  OPEN
+  IN_PROGRESS
+  DONE
+  CANCELLED
+}
+
+enum ActivityType {
+  CALL
+  WHATSAPP
+  EMAIL
+  MEETING
+  NOTE
+  LEAD_CREATED
+  STATUS_CHANGED
+  TASK_CREATED
+  SYSTEM
+}
+
+enum ActivityDirection {
+  INBOUND
+  OUTBOUND
+}
+
+enum FacebookLeadStatus {
+  RECEIVED
+  PROCESSED
+  FAILED
+  IGNORED
+}
+
+enum IntegrationName {
+  N8N
+  WHATSAPP
+  FACEBOOK
+}
+
+// ==================================================
+// MODELS
+// ==================================================
+
+model Organization {
+  id           String   @id @default(cuid())
+  name         String
+  phone        String?
+  email        String?
+  // Used by the public lead form / inbound integrations to resolve
+  // which organization a request belongs to, without letting the
+  // client choose an arbitrary organizationId.
+  publicApiKey String   @unique @default(cuid())
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  users                 User[]
+  contacts              Contact[]
+  leads                 Lead[]
+  properties            Property[]
+  deals                 Deal[]
+  tasks                 Task[]
+  activities            Activity[]
+  facebookIntegrations  FacebookIntegration[]
+  facebookLeads         FacebookLead[]
+  integrationLogs       IntegrationLog[]
+
+  @@map("organizations")
+}
+
+model User {
+  id             String   @id @default(cuid())
+  organizationId String
+  firstName      String
+  lastName       String
+  email          String   @unique
+  passwordHash   String
+  phone          String?
+  role           Role     @default(AGENT)
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  assignedLeads     Lead[]     @relation("LeadAssignedUser")
+  ownedDeals        Deal[]     @relation("DealOwner")
+  assignedTasks     Task[]     @relation("TaskAssignedUser")
+  activities        Activity[] @relation("ActivityUser")
+
+  @@index([organizationId])
+  @@map("users")
+}
+
+model Contact {
+  id             String   @id @default(cuid())
+  organizationId String
+  firstName      String
+  lastName       String?
+  phone          String
+  email          String?
+  notes          String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  leads        Lead[]
+  deals        Deal[]
+  tasks        Task[]
+  activities   Activity[]
+
+  // Prevents duplicate contacts for the same phone number within an organization.
+  @@unique([organizationId, phone])
+  @@index([organizationId])
+  @@index([organizationId, email])
+  @@map("contacts")
+}
+
+model Lead {
+  id              String         @id @default(cuid())
+  organizationId  String
+  contactId       String
+  assignedUserId  String?
+  source          LeadSource     @default(OTHER)
+  status          LeadStatus     @default(NEW)
+  interestType    InterestType?
+  propertyType    PropertyKind?
+  city            String?
+  budget          Decimal?       @db.Decimal(14, 2)
+  bedrooms        Int?
+  message         String?
+  responseStatus  ResponseStatus @default(WAITING)
+  receivedAt      DateTime       @default(now())
+  assignedAt      DateTime?
+  firstResponseAt DateTime?
+  closedAt        DateTime?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  contact      Contact      @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  assignedUser User?        @relation("LeadAssignedUser", fields: [assignedUserId], references: [id], onDelete: SetNull)
+
+  deals         Deal[]
+  tasks         Task[]
+  activities    Activity[]
+  facebookLeads FacebookLead[]
+
+  @@index([organizationId])
+  @@index([organizationId, status])
+  @@index([organizationId, responseStatus])
+  @@index([organizationId, assignedUserId])
+  @@index([organizationId, receivedAt])
+  @@map("leads")
+}
+
+model Property {
+  id              String          @id @default(cuid())
+  organizationId  String
+  title           String
+  description     String?
+  propertyType    PropertyKind    @default(APARTMENT)
+  transactionType TransactionType @default(SALE)
+  city            String
+  address         String?
+  price           Decimal         @db.Decimal(14, 2)
+  bedrooms        Int?
+  bathrooms       Int?
+  sizeSqm         Int?
+  status          PropertyStatus  @default(AVAILABLE)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  deals        Deal[]
+
+  @@index([organizationId])
+  @@index([organizationId, city])
+  @@index([organizationId, status])
+  @@map("properties")
+}
+
+model Deal {
+  id                 String    @id @default(cuid())
+  organizationId     String
+  contactId          String
+  leadId             String?
+  propertyId         String?
+  ownerId            String
+  title              String
+  value              Decimal   @db.Decimal(14, 2)
+  stage              DealStage @default(OPEN)
+  probability        Int       @default(0)
+  expectedCloseDate  DateTime?
+  closedAt           DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  contact      Contact      @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  lead         Lead?        @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  property     Property?    @relation(fields: [propertyId], references: [id], onDelete: SetNull)
+  owner        User         @relation("DealOwner", fields: [ownerId], references: [id], onDelete: Restrict)
+
+  @@index([organizationId])
+  @@index([organizationId, stage])
+  @@index([organizationId, ownerId])
+  @@map("deals")
+}
+
+model Task {
+  id             String       @id @default(cuid())
+  organizationId String
+  contactId      String?
+  leadId         String?
+  assignedUserId String
+  title          String
+  description    String?
+  type           TaskType     @default(OTHER)
+  priority       TaskPriority @default(MEDIUM)
+  status         TaskStatus   @default(OPEN)
+  dueAt          DateTime
+  completedAt    DateTime?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  contact      Contact?     @relation(fields: [contactId], references: [id], onDelete: SetNull)
+  lead         Lead?        @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  assignedUser User         @relation("TaskAssignedUser", fields: [assignedUserId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([organizationId, assignedUserId])
+  @@index([organizationId, status])
+  @@index([organizationId, dueAt])
+  @@map("tasks")
+}
+
+model Activity {
+  id             String             @id @default(cuid())
+  organizationId String
+  contactId      String
+  leadId         String?
+  userId         String?
+  type           ActivityType
+  direction      ActivityDirection?
+  description    String
+  metadata       Json?
+  createdAt      DateTime           @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  contact      Contact      @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  lead         Lead?        @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  user         User?        @relation("ActivityUser", fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId])
+  @@index([organizationId, contactId])
+  @@index([organizationId, leadId])
+  @@index([createdAt])
+  @@map("activities")
+}
+
+// Maps a Facebook Page to an Organization so inbound lead ads webhooks
+// can be routed to the right tenant. Populated once a client connects
+// their Facebook Page (future onboarding UI); until then, the dev
+// simulate endpoint lets us exercise the whole flow.
+model FacebookIntegration {
+  id             String   @id @default(cuid())
+  organizationId String
+  pageId         String   @unique
+  pageAccessToken String?
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@map("facebook_integrations")
+}
+
+// One row per Facebook "leadgen" webhook event. externalLeadId (leadgenId)
+// is unique so the same lead notification can never be processed twice.
+model FacebookLead {
+  id             String             @id @default(cuid())
+  organizationId String?
+  pageId         String
+  formId         String?
+  leadgenId      String             @unique
+  status         FacebookLeadStatus @default(RECEIVED)
+  rawPayload     Json
+  fetchedData    Json?
+  errorMessage   String?
+  leadId         String?
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  lead         Lead?         @relation(fields: [leadId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId])
+  @@map("facebook_leads")
+}
+
+// Honest, queryable record of every outbound integration call (n8n webhook
+// dispatch, WhatsApp send attempt) so the Automations UI can show real
+// "last execution" / "last result" instead of inferring success from a
+// button click. Never stores secrets - only what happened and when.
+model IntegrationLog {
+  id             String          @id @default(cuid())
+  organizationId String?
+  integration    IntegrationName
+  event          String
+  success        Boolean
+  errorMessage   String?
+  metadata       Json?
+  createdAt      DateTime        @default(now())
+
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, integration, createdAt])
+  @@map("integration_logs")
+}

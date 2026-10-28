@@ -1,0 +1,77 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Heebo", "Assistant", ui-sans-serif, system-ui, sans-serif;
+
+  --color-navy: #14233a;
+  --color-navy-light: #253d60;
+  --color-brand: #3367dc;
+  --color-brand-dark: #2a53b3;
+  --color-app-bg: #f5f7fb;
+  --color-card: #ffffff;
+  --color-border: #e6eaf1;
+  --color-text: #1e293b;
+  --color-muted: #8290a4;
+
+  --color-success: #1aa36b;
+  --color-success-bg: #e8f7f0;
+  --color-warning: #c57a12;
+  --color-warning-bg: #fdf1dd;
+  --color-danger: #d13b3b;
+  --color-danger-bg: #fcebeb;
+  --color-info: #3367dc;
+  --color-info-bg: #eaf0fd;
+}
+
+html,
+body {
+  font-family: var(--font-sans);
+  background-color: var(--color-app-bg);
+  color: var(--color-text);
+}
+
+* {
+  border-color: var(--color-border);
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background-color: #cbd5e1;
+  border-radius: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* react-hook-form / native inputs should inherit the app font */
+input,
+textarea,
+select,
+button {
+  font-family: inherit;
+}
+
+.focus-ring {
+  outline: none;
+}
+.focus-ring:focus-visible {
+  outline: 2px solid var(--color-brand);
+  outline-offset: 1px;
+}
+
+@keyframes panel-slide-in {
+  from {
+    transform: translateX(-16px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+.panel-slide-in {
+  animation: panel-slide-in 180ms ease-out;
+}

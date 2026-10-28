@@ -1,0 +1,199 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "RealEstate CRM API",
+    "version": "1.0.0",
+    "description": "Backend REST API for a multi-tenant real-estate CRM. Every authenticated endpoint requires a Bearer JWT obtained from /api/auth/login. All responses use { success, data } (or { success:false, error } on failure)."
+  },
+  "servers": [{ "url": "/api" }],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": { "type": "http", "scheme": "bearer", "bearerFormat": "JWT" },
+      "internalApiKey": { "type": "apiKey", "in": "header", "name": "X-Internal-Api-Key" },
+      "publicApiKey": { "type": "apiKey", "in": "header", "name": "x-public-api-key" }
+    },
+    "schemas": {
+      "ApiError": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean", "example": false },
+          "error": {
+            "type": "object",
+            "properties": { "code": { "type": "string" }, "message": { "type": "string" } }
+          }
+        }
+      },
+      "RegisterRequest": {
+        "type": "object",
+        "required": ["organizationName", "firstName", "lastName", "email", "password"],
+        "properties": {
+          "organizationName": { "type": "string" },
+          "firstName": { "type": "string" },
+          "lastName": { "type": "string" },
+          "email": { "type": "string", "format": "email" },
+          "password": { "type": "string", "minLength": 8 },
+          "phone": { "type": "string" }
+        }
+      },
+      "LoginRequest": {
+        "type": "object",
+        "required": ["email", "password"],
+        "properties": {
+          "email": { "type": "string", "format": "email" },
+          "password": { "type": "string" }
+        }
+      },
+      "PublicLeadRequest": {
+        "type": "object",
+        "required": ["firstName", "phone"],
+        "properties": {
+          "firstName": { "type": "string" },
+          "lastName": { "type": "string" },
+          "phone": { "type": "string" },
+          "email": { "type": "string" },
+          "source": { "type": "string", "enum": ["FACEBOOK", "INSTAGRAM", "WEBSITE", "WHATSAPP", "PHONE", "REFERRAL", "MANUAL", "OTHER"] },
+          "interestType": { "type": "string", "enum": ["BUY", "RENT", "SELL"] },
+          "propertyType": { "type": "string" },
+          "city": { "type": "string" },
+          "budget": { "type": "number" },
+          "bedrooms": { "type": "integer" },
+          "message": { "type": "string" }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "summary": "Health check",
+        "responses": { "200": { "description": "Service and database status" } }
+      }
+    },
+    "/auth/register": {
+      "post": {
+        "summary": "Register a new organization + its first ADMIN user",
+        "requestBody": { "content": { "application/json": { "schema": { "$ref": "#/components/schemas/RegisterRequest" } } } },
+        "responses": { "201": { "description": "Created" }, "400": { "description": "Validation error" }, "409": { "description": "Email already exists" } }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "summary": "Login and receive a JWT",
+        "requestBody": { "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LoginRequest" } } } },
+        "responses": { "200": { "description": "OK" }, "401": { "description": "Invalid credentials" } }
+      }
+    },
+    "/auth/me": {
+      "get": {
+        "summary": "Current authenticated user",
+        "security": [{ "bearerAuth": [] }],
+        "responses": { "200": { "description": "OK" }, "401": { "description": "Unauthorized" } }
+      }
+    },
+    "/contacts": {
+      "get": { "summary": "List contacts (search, phone, email, pagination)", "security": [{ "bearerAuth": [] }], "responses": { "200": { "description": "OK" } } },
+      "post": { "summary": "Create a contact", "security": [{ "bearerAuth": [] }], "responses": { "201": { "description": "Created" } } }
+    },
+    "/contacts/{id}": {
+      "get": { "summary": "Get a contact", "security": [{ "bearerAuth": [] }], "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }], "responses": { "200": { "description": "OK" } } },
+      "patch": { "summary": "Update a contact", "security": [{ "bearerAuth": [] }], "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }], "responses": { "200": { "description": "OK" } } },
+      "delete": { "summary": "Delete a contact", "security": [{ "bearerAuth": [] }], "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }], "responses": { "204": { "description": "Deleted" } } }
+    },
+    "/contacts/{id}/activities": {
+      "get": { "summary": "List activities for a contact", "security": [{ "bearerAuth": [] }], "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }], "responses": { "200": { "description": "OK" } } }
+    },
+    "/leads": {
+      "get": {
+        "summary": "List leads (filters: status, source, assignedUserId, city, responseStatus, date range; sort by receivedAt/createdAt/budget)",
+        "security": [{ "bearerAuth": [] }],
+        "responses": { "200": { "description": "OK" } }
+      },
+      "post": {
+        "summary": "Create a lead - runs the full Contact-dedupe -> Assignment -> Task -> Activity -> n8n pipeline",
+        "security": [{ "bearerAuth": [] }],
+        "responses": { "201": { "description": "Created" } }
+      }
+    },
+    "/leads/{id}": {
+      "get": { "summary": "Get a lead", "security": [{ "bearerAuth": [] }], "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }], "responses": { "200": { "description": "OK" } } },
+      "patch": { "summary": "Update a lead (status, responseStatus, assignment, etc.)", "security": [{ "bearerAuth": [] }], "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }], "responses": { "200": { "description": "OK" } } },
+      "delete": { "summary": "Delete a lead", "security": [{ "bearerAuth": [] }], "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }], "responses": { "204": { "description": "Deleted" } } }
+    },
+    "/properties": {
+      "get": { "summary": "List properties (filters: city, transactionType, propertyType, status, priceMin/Max, bedrooms)", "security": [{ "bearerAuth": [] }], "responses": { "200": { "description": "OK" } } },
+      "post": { "summary": "Create a property", "security": [{ "bearerAuth": [] }], "responses": { "201": { "description": "Created" } } }
+    },
+    "/properties/{id}": {
+      "get": { "summary": "Get a property", "security": [{ "bearerAuth": [] }], "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }], "responses": { "200": { "description": "OK" } } },
+      "patch": { "summary": "Update a property", "security": [{ "bearerAuth": [] }], "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }], "responses": { "200": { "description": "OK" } } },
+      "delete": { "summary": "Delete a property", "security": [{ "bearerAuth": [] }], "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }], "responses": { "204": { "description": "Deleted" } } }
+    },
+    "/deals": {
+      "get": { "summary": "List deals", "security": [{ "bearerAuth": [] }], "responses": { "200": { "description": "OK" } } },
+      "post": { "summary": "Create a deal", "security": [{ "bearerAuth": [] }], "responses": { "201": { "description": "Created" } } }
+    },
+    "/deals/{id}": {
+      "get": { "summary": "Get a deal", "security": [{ "bearerAuth": [] }], "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }], "responses": { "200": { "description": "OK" } } },
+      "patch": { "summary": "Update a deal (WON/LOST syncs the linked lead)", "security": [{ "bearerAuth": [] }], "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }], "responses": { "200": { "description": "OK" } } },
+      "delete": { "summary": "Delete a deal", "security": [{ "bearerAuth": [] }], "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }], "responses": { "204": { "description": "Deleted" } } }
+    },
+    "/tasks": {
+      "get": { "summary": "List tasks (filters: assignedUserId, status, type, priority, due date, overdue)", "security": [{ "bearerAuth": [] }], "responses": { "200": { "description": "OK" } } },
+      "post": { "summary": "Create a task", "security": [{ "bearerAuth": [] }], "responses": { "201": { "description": "Created" } } }
+    },
+    "/tasks/today": {
+      "get": { "summary": "Tasks due today for the current user's scope", "security": [{ "bearerAuth": [] }], "responses": { "200": { "description": "OK" } } }
+    },
+    "/tasks/{id}": {
+      "get": { "summary": "Get a task", "security": [{ "bearerAuth": [] }], "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }], "responses": { "200": { "description": "OK" } } },
+      "patch": { "summary": "Update a task", "security": [{ "bearerAuth": [] }], "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }], "responses": { "200": { "description": "OK" } } },
+      "delete": { "summary": "Delete a task", "security": [{ "bearerAuth": [] }], "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }], "responses": { "204": { "description": "Deleted" } } }
+    },
+    "/activities": {
+      "get": { "summary": "List activities", "security": [{ "bearerAuth": [] }], "responses": { "200": { "description": "OK" } } },
+      "post": { "summary": "Create an activity (may trigger Speed-to-Lead firstResponseAt update)", "security": [{ "bearerAuth": [] }], "responses": { "201": { "description": "Created" } } }
+    },
+    "/dashboard/summary": {
+      "get": { "summary": "Dashboard KPI summary", "security": [{ "bearerAuth": [] }], "responses": { "200": { "description": "OK" } } }
+    },
+    "/dashboard/recent-leads": {
+      "get": { "summary": "Most recently received leads", "security": [{ "bearerAuth": [] }], "responses": { "200": { "description": "OK" } } }
+    },
+    "/dashboard/response-performance": {
+      "get": { "summary": "Speed-to-Lead performance stats (avg/median response time, SLA hits, overdue count)", "security": [{ "bearerAuth": [] }], "responses": { "200": { "description": "OK" } } }
+    },
+    "/public/leads": {
+      "post": {
+        "summary": "Public website lead form intake (no user JWT - organization resolved from x-public-api-key)",
+        "security": [{ "publicApiKey": [] }],
+        "requestBody": { "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PublicLeadRequest" } } } },
+        "responses": { "201": { "description": "Created" }, "401": { "description": "Invalid public API key" } }
+      }
+    },
+    "/webhooks/facebook": {
+      "get": { "summary": "Meta webhook subscription verification handshake", "responses": { "200": { "description": "Echoes hub.challenge" } } },
+      "post": { "summary": "Meta Lead Ads webhook receiver (X-Hub-Signature-256 verified)", "responses": { "200": { "description": "Acknowledged" } } }
+    },
+    "/webhooks/facebook/simulate": {
+      "post": {
+        "summary": "Development helper - simulates a Facebook lead without real Meta credentials",
+        "security": [{ "internalApiKey": [] }],
+        "responses": { "200": { "description": "Processed" } }
+      }
+    },
+    "/internal/leads/check-overdue": {
+      "post": {
+        "summary": "Flip WAITING leads past the SLA to OVERDUE - intended to be called by an n8n Cron workflow",
+        "security": [{ "internalApiKey": [] }],
+        "responses": { "200": { "description": "OK" } }
+      }
+    },
+    "/integrations/whatsapp/test": {
+      "post": {
+        "summary": "Send a test WhatsApp message (real or mock depending on configuration)",
+        "security": [{ "bearerAuth": [] }],
+        "responses": { "200": { "description": "OK" } }
+      }
+    }
+  }
+}
