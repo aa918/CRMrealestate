@@ -262,6 +262,8 @@ two sub-project READMEs:
   endpoint, integration setup, tests
 - 📗 [`frontend/README.md`](frontend/README.md) — architecture, pages, and the
   data-honesty rules the UI follows
+- 🚀 [`DEPLOY.md`](DEPLOY.md) — deploying your own live instance (Render + Vercel,
+  both free tiers)
 
 ## 👤 Demo Accounts
 

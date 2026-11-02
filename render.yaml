@@ -1,0 +1,55 @@
+databases:
+  - name: estateflow-db
+    plan: free
+    databaseName: estateflow
+    user: estateflow
+
+services:
+  - type: web
+    name: estateflow-backend
+    env: node
+    plan: free
+    rootDir: backend
+    buildCommand: npm install && npx prisma generate && npx prisma migrate deploy
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: estateflow-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      - key: LEAD_RESPONSE_SLA_MINUTES
+        value: "15"
+      - key: INTERNAL_API_KEY
+        generateValue: true
+      - key: PUBLIC_LEAD_API_KEY
+        generateValue: true
+      - key: N8N_LEAD_WEBHOOK_URL
+        value: ""
+      - key: N8N_API_SECRET
+        generateValue: true
+      - key: FACEBOOK_VERIFY_TOKEN
+        value: ""
+      - key: FACEBOOK_APP_SECRET
+        value: ""
+      - key: FACEBOOK_ACCESS_TOKEN
+        value: ""
+      - key: FACEBOOK_GRAPH_API_VERSION
+        value: v20.0
+      - key: WHATSAPP_ACCESS_TOKEN
+        value: ""
+      - key: WHATSAPP_PHONE_NUMBER_ID
+        value: ""
+      - key: WHATSAPP_API_VERSION
+        value: v20.0
+      # Set this AFTER the frontend is deployed to Vercel, to the exact
+      # Vercel URL (e.g. https://estateflow.vercel.app) - until then,
+      # cross-origin requests from the frontend will be blocked.
+      - key: CORS_ORIGINS
+        value: ""
